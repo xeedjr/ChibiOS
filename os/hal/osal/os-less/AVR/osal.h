@@ -247,6 +247,9 @@ typedef struct {
  * @name    Debug related macros
  * @{
  */
+
+extern void Write_error(char *filename, uint32_t line);
+
 /**
  * @brief   Condition assertion.
  * @details If the condition check fails then the OSAL panics with a
@@ -266,6 +269,7 @@ typedef struct {
   if (OSAL_DBG_ENABLE_ASSERTS != FALSE) {                                   \
     if (!(c)) {                                                             \
   /*lint -restore*/                                                         \
+      Write_error(__FILE__, __LINE__);										\
       osalSysHalt(__func__);                                                \
     }                                                                       \
   }                                                                         \
@@ -286,7 +290,8 @@ typedef struct {
   if (OSAL_DBG_ENABLE_CHECKS != FALSE) {                                    \
     if (!(c)) {                                                             \
   /*lint -restore*/                                                         \
-      osalSysHalt(__func__);                                                \
+      Write_error(__FILE__, __LINE__);										\
+	  osalSysHalt(__func__);                                                \
     }                                                                       \
   }                                                                         \
 } while (false)
