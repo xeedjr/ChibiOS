@@ -58,7 +58,11 @@ const timer_registers_t regs_table[] = {
   { &TCCR2A, &TCCR2B, &OCR2A, &OCR2A, &TCNT2, &TCNT2, &TIFR2, &TIMSK2 },
 #endif
 #if AVR_GPT_USE_TIM3 || defined(__DOXYGEN__)
-  { &TCCR3A, &TCCR3B, &OCR3AH, &OCR3AL, &TCNT3H, &TCNT3L, &TIFR3, &TIMSK3 },
+#ifndef __AVR_ATmega128__
+	{ &TCCR3A, &TCCR3B, &OCR3AH, &OCR3AL, &TCNT3H, &TCNT3L, &TIFR3, &TIMSK3 },
+#else
+	{ &TCCR3A, &TCCR3B, &OCR3AH, &OCR3AL, &TCNT3H, &TCNT3L, &ETIFR, &ETIMSK  },
+#endif
 #endif
 #if AVR_GPT_USE_TIM4 || defined(__DOXYGEN__)
   { &TCCR4A, &TCCR4B, &OCR4AH, &OCR4AL, &TCNT4H, &TCNT4L, &TIFR4, &TIMSK4 },
@@ -109,18 +113,21 @@ static uint8_t  clock_source_base[]= { 5, 4, 3, 2, 1 };
  * @param[in] n       ....
  * @return            ....
  */
-static uint8_t prescaler(uint16_t freq, uint16_t *ratio, uint8_t n) {
+static uint8_t prescaler(gptfreq_t freq, uint16_t *ratio, uint8_t n) {
 
   uint8_t i;
 
   for (i = 0; i < n; ++i) {
-    uint32_t result = F_CPU / ratio[i] / freq;
-    if (result > 256UL)
-       return i - 1;
-    if ((result * ratio[i] * freq) == F_CPU)
-      return i;
+    double result = (double)F_CPU / (double)ratio[i] / (double)freq;
+	if (result > 1.0) {
+		if (result > 256UL)
+		   return i - 1;
+		if ((result * (double)ratio[i] * (double)freq) == (double)F_CPU)
+		  return i;
+	}
   }
-  return -1;
+
+  osalDbgCheck(FALSE);
 }
 
 /**
