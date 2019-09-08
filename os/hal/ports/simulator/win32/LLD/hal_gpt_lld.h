@@ -32,7 +32,6 @@
 
 #if HAL_USE_GPT || defined(__DOXYGEN__)
 
-#include "SIMUL_timers.h"
 
 /*==========================================================================*/
 /* Driver constants.                                                        */

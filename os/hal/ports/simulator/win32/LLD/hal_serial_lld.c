@@ -38,19 +38,7 @@
 #if SIMUL_SERIAL_USE_USART0 || defined(__DOXYGEN__)
 SerialDriver SD1;
 
-  /* USARTs are not consistently named across the SIMUL range. */
-  #ifdef USART0_RX_vect
-    #define SIMUL_SD1_RX_VECT USART0_RX_vect
-    #define SIMUL_SD1_TX_VECT USART0_UDRE_vect
-  #elif defined(USART_RX_vect)
-    #define SIMUL_SD1_RX_VECT USART_RX_vect
-    #define SIMUL_SD1_TX_VECT USART_UDRE_vect
-  #elif defined(USART0_RXC_vect)
-    #define SIMUL_SD1_RX_VECT USART0_RXC_vect
-    #define SIMUL_SD1_TX_VECT USART0_UDRE_vect
-  #else
-    #error "Cannot find USART to use for SD1"
-  #endif 
+
 #endif /* SIMUL_SERIAL_USE_USART0 */
 
 /**
@@ -61,16 +49,7 @@ SerialDriver SD1;
 #if SIMUL_SERIAL_USE_USART1 || defined(__DOXYGEN__)
 SerialDriver SD2;
 
-  /* Check if USART1 exists for this MCU. */
-  #ifdef USART1_RX_vect
-    #define SIMUL_SD2_RX_VECT USART1_RX_vect
-    #define SIMUL_SD2_TX_VECT USART1_UDRE_vect
-  #elif defined (USART1_RXC_vect)
-    #define SIMUL_SD2_RX_VECT USART1_RXC_vect
-    #define SIMUL_SD2_TX_VECT USART1_UDRE_vect
-  #else
-    #error "Cannot find USART to use for SD2"
-  #endif
+
 #endif /* SIMUL_SERIAL_USE_USART1 */
 
 /*==========================================================================*/
@@ -97,17 +76,13 @@ static void set_error(uint8_t sra, SerialDriver *sdp) {
 
 #if SIMUL_SERIAL_USE_USART0
   if (&SD1 == sdp) {
-    dor = (1 << DOR0);
-    upe = (1 << UPE0);
-    fe = (1 << FE0);
+
   }
 #endif
 
 #if SIMUL_SERIAL_USE_USART1
   if (&SD2 == sdp) {
-    dor = (1 << DOR1);
-    upe = (1 << UPE1);
-    fe = (1 << FE1);
+
   }
 #endif
 
@@ -126,7 +101,7 @@ static void set_error(uint8_t sra, SerialDriver *sdp) {
 static void notify1(io_queue_t *qp) {
 
   (void)qp;
-  UCSR0B |= (1 << UDRIE0);
+
 }
 
 /**
@@ -136,36 +111,7 @@ static void notify1(io_queue_t *qp) {
  */
 static void usart0_init(const SerialConfig *config) {
 
-  uint8_t ucsr0c;
 
-  UBRR0L = config->sc_brr;
-  UBRR0H = (config->sc_brr >> 8) & 0x0f;
-  UCSR0A = (1 << U2X0);
-  UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-  switch (config->sc_bits_per_char) {
-  case USART_CHAR_SIZE_5:
-    ucsr0c = 0;
-    break;
-  case USART_CHAR_SIZE_6:
-    ucsr0c = (1 << UCSZ00);
-    break;
-  case USART_CHAR_SIZE_7:
-    ucsr0c = (1 << UCSZ01);
-    break;
-  case USART_CHAR_SIZE_9:
-    UCSR0B |= (1 << UCSZ02);
-    ucsr0c = (1 << UCSZ00) | (1 << UCSZ01);
-    break;
-  case USART_CHAR_SIZE_8:
-  default:
-    ucsr0c = (1 << UCSZ00) | (1 << UCSZ01);
-  }
-  
-#if defined(__SIMUL_ATmega162__)
-  UCSR0C = (1 << URSEL0) | ucsr0c;
-#else
-  UCSR0C = ucsr0c;
-#endif
 }
 
 /**
@@ -173,13 +119,7 @@ static void usart0_init(const SerialConfig *config) {
  */
 static void usart0_deinit(void) {
 
-  UCSR0A = 0;
-  UCSR0B = 0;
-#if defined(__SIMUL_ATmega162__)
-  UCSR0C = (1 << URSEL0);
-#else
-  UCSR0C = 0;
-#endif
+
 }
 #endif
 
@@ -187,7 +127,7 @@ static void usart0_deinit(void) {
 static void notify2(io_queue_t *qp) {
 
   (void)qp;
-  UCSR1B |= (1 << UDRIE1);
+
 }
 
 /**
@@ -197,36 +137,6 @@ static void notify2(io_queue_t *qp) {
  */
 static void usart1_init(const SerialConfig *config) {
 
-  uint8_t ucsr1c;
-
-  UBRR1L = config->sc_brr;
-  UBRR1H = (config->sc_brr >> 8) & 0x0f;
-  UCSR1A = (1 << U2X0);
-  UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (1 << RXCIE1);
-  switch (config->sc_bits_per_char) {
-  case USART_CHAR_SIZE_5:
-	ucsr1c = 0;
-    break;
-  case USART_CHAR_SIZE_6:
-    ucsr1c = (1 << UCSZ10);
-    break;
-  case USART_CHAR_SIZE_7:
-    ucsr1c = (1 << UCSZ11);
-    break;
-  case USART_CHAR_SIZE_9:
-    UCSR1B |= (1 << UCSZ12);
-    ucsr1c = (1 << UCSZ10) | (1 << UCSZ11);
-    break;
-  case USART_CHAR_SIZE_8:
-  default:
-    ucsr1c = (1 << UCSZ10) | (1 << UCSZ11);
-  }
-  
-#if defined(__SIMUL_ATmega162__)
-  UCSR1C = (1 << URSEL1) | ucsr1c;
-#else
-  UCSR1C = ucsr1c;
-#endif
 }
 
 /**
@@ -234,13 +144,6 @@ static void usart1_init(const SerialConfig *config) {
  */
 static void usart1_deinit(void) {
 
-  UCSR1A = 0;
-  UCSR1B = 0;
-#if defined(__SIMUL_ATmega162__)
-  UCSR1C = (1 << URSEL1);
-#else
-  UCSR1C = 0;
-#endif
 }
 #endif
 
@@ -259,11 +162,12 @@ OSAL_IRQ_HANDLER(SIMUL_SD1_RX_VECT) {
 
   OSAL_IRQ_PROLOGUE();
 
-  sra = UCSR0A;
-  if (sra & ((1 << DOR0) | (1 << UPE0) | (1 << FE0)))
-    set_error(sra, &SD1);
+  // TODO
+  //sra = UCSR0A;
+  //if (sra & ((1 << DOR0) | (1 << UPE0) | (1 << FE0)))
+  //  set_error(sra, &SD1);
   osalSysLockFromISR();
-  sdIncomingDataI(&SD1, UDR0);
+  //sdIncomingDataI(&SD1, UDR0);
   osalSysUnlockFromISR();
 
   OSAL_IRQ_EPILOGUE();
@@ -282,10 +186,10 @@ OSAL_IRQ_HANDLER(SIMUL_SD1_TX_VECT) {
   osalSysLockFromISR();
   b = sdRequestDataI(&SD1);
   osalSysUnlockFromISR();
-  if (b < MSG_OK)
-    UCSR0B &= ~(1 << UDRIE0);
-  else
-    UDR0 = b;
+//  if (b < MSG_OK)
+//    UCSR0B &= ~(1 << UDRIE0);
+//  else
+//    UDR0 = b;
 
   OSAL_IRQ_EPILOGUE();
 }

@@ -86,8 +86,6 @@ static void setAdcChannel(uint8_t channelNum) {
 /* Driver interrupt handlers.                                               */
 /*==========================================================================*/
 
-#include <util/delay.h>
-
 OSAL_IRQ_HANDLER(ADC_vect) {
 
   OSAL_IRQ_PROLOGUE();
