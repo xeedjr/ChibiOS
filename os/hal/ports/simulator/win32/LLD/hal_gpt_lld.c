@@ -35,38 +35,7 @@
 /* Driver local definitions.                                                */
 /*==========================================================================*/
 
-#define PRESCALER_SIZE_BASE       5
-#define PRESCALER_SIZE_EXTENDED   7
 
-/* FIXME: could use better names here! */
-typedef struct {
-  volatile uint8_t *tccra;
-  volatile uint8_t *tccrb;
-  volatile uint8_t *ocr1;
-  volatile uint8_t *ocr2;
-  volatile uint8_t *tcnt1;
-  volatile uint8_t *tcnt2;
-  volatile uint8_t *tifr;
-  volatile uint8_t *timsk;
-} timer_registers_t;
-
-const timer_registers_t regs_table[] = {
-#if SIMUL_GPT_USE_TIM1 || defined(__DOXYGEN__)
-  { &TCCR1A, &TCCR1B, &OCR1AH, &OCR1AL, &TCNT1H, &TCNT1L, &TIFR1, &TIMSK1 },
-#endif
-#if SIMUL_GPT_USE_TIM2 || defined(__DOXYGEN__)
-  { &TCCR2A, &TCCR2B, &OCR2A, &OCR2A, &TCNT2, &TCNT2, &TIFR2, &TIMSK2 },
-#endif
-#if SIMUL_GPT_USE_TIM3 || defined(__DOXYGEN__)
-  { &TCCR3A, &TCCR3B, &OCR3AH, &OCR3AL, &TCNT3H, &TCNT3L, &TIFR3, &TIMSK3 },
-#endif
-#if SIMUL_GPT_USE_TIM4 || defined(__DOXYGEN__)
-  { &TCCR4A, &TCCR4B, &OCR4AH, &OCR4AL, &TCNT4H, &TCNT4L, &TIFR4, &TIMSK4 },
-#endif
-#if SIMUL_GPT_USE_TIM5 || defined(__DOXYGEN__)
-  { &TCCR5A, &TCCR5B, &OCR5AH, &OCR5AL, &TCNT5H, &TCNT5L, &TIFR5, &TIMSK5 },
-#endif
-};
 
 /*==========================================================================*/
 /* Driver exported variables.                                               */
@@ -92,10 +61,7 @@ GPTDriver GPTD5;
 /* Driver local variables.                                                  */
 /*==========================================================================*/
 
-static uint16_t ratio_base[] = { 1024, 256, 64, 8, 1 };
-static uint8_t  clock_source_base[]= { 5, 4, 3, 2, 1 };
-//static uint16_t ratio_extended[] = { 1024, 256, 128, 64, 32, 8, 1 };
-//static uint8_t  clock_source_extended[] = { 7, 6, 5, 4, 3, 2, 1 };
+
 
 /*==========================================================================*/
 /* Driver local functions.                                                  */
@@ -300,29 +266,7 @@ void gpt_lld_start(GPTDriver *gptp) {
 
   /* Configuration.*/
 
-#if SIMUL_GPT_USE_TIM2 || defined(__DOXYGEN__)
-  if (gptp == &GPTD2) {
-    psc = prescaler(gptp->config->frequency, ratio_extended, PRESCALER_SIZE_EXTENDED);
-    gptp->clock_source = clock_source_extended[psc] & 0x07;
-    TCCR2A  = (1 << WGM21) | (0 << WGM20);
-    TCCR2B  = (0 << WGM22);
-    OCR2A = F_CPU / ratio_extended[psc] /gptp->config->frequency - 1;
-    return;
-  }
-#endif
 
-  uint8_t i = getTimerIndex(gptp);
-  psc = prescaler(gptp->config->frequency, ratio_base, PRESCALER_SIZE_BASE);
-  gptp->clock_source = clock_source_base[psc] & 0x07;
-  *regs_table[i].tccra = (0 << WGM11)  |
-                         (0 << WGM10)  |
-                         (0 << COM1A1) |
-                         (0 << COM1A0) |
-                         (0 << COM1B1) |
-                         (0 << COM1B0);
-  *regs_table[i].tccrb = (1 << WGM12);
-  *regs_table[i].ocr1 = 0;
-  *regs_table[i].ocr2 = F_CPU / ratio_base[psc] / gptp->config->frequency - 1;
 }
 
 /**
@@ -356,11 +300,7 @@ void gpt_lld_start_timer(GPTDriver *gptp, gptcnt_t period) {
   gptp->counter = 0;
 
   uint8_t i = getTimerIndex(gptp);
-  *regs_table[i].tcnt1 = 0;
-  *regs_table[i].tcnt2 = 0;
-  *regs_table[i].tifr  = (1 << OCF1A);
-  *regs_table[i].timsk = (1 << OCIE1A);
-  *regs_table[i].tccrb |= (gptp->clock_source << CS10);
+
 }
 
 /**
@@ -374,8 +314,7 @@ void gpt_lld_stop_timer(GPTDriver *gptp) {
 
   uint8_t i = getTimerIndex(gptp);
 
-  *regs_table[i].tccrb &= ~((7 << CS10) | (1 << OCIE1A));
-  *regs_table[i].tifr = (1 << OCF1A);
+
 }
 
 /**
