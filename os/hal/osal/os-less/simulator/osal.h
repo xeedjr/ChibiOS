@@ -580,7 +580,7 @@ static inline void osalSysUnlockFromISR(void) {
  * @xclass
  */
 static inline syssts_t osalSysGetStatusAndLockX(void) {
-  syssts_t sts;
+  syssts_t sts = 0;
 
  // sts = SREG;
  // asm volatile ("cli" : : : "memory");
