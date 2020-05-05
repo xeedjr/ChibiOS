@@ -132,7 +132,7 @@ static inline void stm32_flash_clear_status(EFlashDriver *eflp) {
 static inline void stm32_flash_wait_busy(EFlashDriver *eflp) {
 
   /* Wait for busy bit clear.*/
-  while ((eflp->flash->SR & FLASH_SR_BSY) != 0U) {
+  while ((eflp->flash->SR & FLASH_SR_BSY1) != 0U) {
   }
 }
 
@@ -143,8 +143,9 @@ static inline size_t stm32_flash_get_size(void) {
 static inline bool stm32_flash_dual_bank(EFlashDriver *eflp) {
 
 #if STM32_FLASH_NUMBER_OF_BANKS > 1
-  return ((eflp->flash->SR & (FLASH_OPTR_DBANK | FLASH_OPTR_DB1M)) != 0U);
+#error "Device settings incorrectly configured - single bank mode only supported"
 #endif
+  (void)eflp;
   return false;
 }
 
@@ -517,7 +518,7 @@ flash_error_t efl_lld_query_erase(void *instance, uint32_t *msec) {
   if (devp->state == FLASH_ERASE) {
 
     /* Checking for operation in progress.*/
-    if ((devp->flash->SR & FLASH_SR_BSY) == 0U) {
+    if ((devp->flash->SR & FLASH_SR_BSY1) == 0U) {
 
       /* Disabling the various erase control bits.*/
       devp->flash->CR &= ~(FLASH_CR_MER1 |
@@ -587,7 +588,8 @@ flash_error_t efl_lld_verify_erase(void *instance, flash_sector_t sector) {
   devp->state = FLASH_READ;
 
   /* Scanning the sector space.*/
-  for (i = 0U; i < bank->sectors_size / sizeof(uint32_t); i++) {
+  uint32_t sector_size = flashGetSectorSize(getBaseFlash(devp), sector);
+  for (i = 0U; i < sector_size / sizeof(uint32_t); i++) {
     if (*address != 0xFFFFFFFFU) {
       err = FLASH_ERROR_VERIFY;
       break;
