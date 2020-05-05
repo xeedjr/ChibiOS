@@ -73,9 +73,26 @@
 *** Releases and Change Log                                               ***
 *****************************************************************************
 
+*** 19.1.5 ***
+- FIX: Fixed failure in chSemReset() function when counter is equal to MAXINT
+       (bug #1093).
+- FIX: Fixed swapped definition in ST_STM32F746G_DISCOVERY board files
+       (bug #1092).
+       
 *** 19.1.4 ***
+- NEW: Updated debug tools to be independent from the toolchain position:
+       they now rely on the environment variable CHIBISTUDIO.
 - NEW: Added support for .cc files extensions in makefiles.
 - NEW: Made bus acquire/release functions in SNOR driver public.
+- FIX: Fixed STM32H7xx ADC problem in dual mode (bug #1089).
+- FIX: Fixed invalid CHSEL DMA setting in STM32 UART drivers (bug #1088).
+- FIX: Fixed undefined TEST_CFG_SIZE_REPORT warning (bug #1087).
+- FIX: Fixed wrong arguments for the cacheBufferInvalidate in the STM32 SPI 
+       demo (bug #1086).
+- FIX: Fixed race condition in HAL MAC driver (bug #1083).
+- FIX: Fixed problem in chMtxUnlockAllS() (bug #1076).
+- FIX: Fixed state check in CMSIS osKernelInitialize() wrapper (bug #1075).
+- FIX: Fixed duplicated code in TIMv1/hal_gpt_lld.c (bug #1074).
 - FIX: Fixed missing IRQ disabling in ADCv1 and ADCv3 STM32 drivers (bug #1073).
 - FIX: Fixed missing parenthesis in ADC _adc_isr_error_code macro (bug #1072).
 - FIX: Fixed invalid macro check in test library (bug #1071).
